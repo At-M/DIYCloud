@@ -1,13 +1,15 @@
-#include "ESP8266TrueRandom.h" // For Random - rain
-#include <FastLED.h>
+// IoTCloud v 0.1
+// https://github.com/At-M/IoTCloud
+// made by At-M
 
+#include "ESP8266TrueRandom.h" // For Random dropchance
+#include <FastLED.h>
 
 #define NUM_LEDS 70
 #define DATA_PIN 2 // D4, 2
 
 
 CRGB leds[NUM_LEDS];
-
 
 // Needs Bridge from D0 (GPIO16) TO RESET PIN!
 /* LED-Setup (from left to right):
@@ -23,9 +25,8 @@ void setup() {
   FastLED.addLeds<WS2812B, DATA_PIN, GRB>(leds, NUM_LEDS);  // GRB ordering is typical
   FastLED.setBrightness(50);
   Serial.begin(115200);
-
 }
-class Raindrop {
+class Dropanim {
   public:
     int startcolumn[7] = {0, 10, 22, 36, 56, 61}; // start of the individual rows
     int endcolumn[7] = {9, 21, 35, 55, 60, 70}; // end of the individual rows
@@ -40,7 +41,7 @@ class Raindrop {
     }
 
 
-    int fall() {
+    int fall(int color, int sat) {
       int colS = randomcolumn();
       if (lastcolumn[colS] == 0) {
         // This Column doesnt have a raindrop in the last 3
@@ -49,7 +50,7 @@ class Raindrop {
         Serial.print("ColS is: ");
         Serial.println(colS);
         int lednr = startcolumn[colS];
-        leds[lednr] = CHSV(150, 255, 255);
+        leds[lednr] = CHSV(color, sat, 255); //set led blue, full saturation and brightness
         dropcolumn[colS] = startcolumn[colS];
       }
       else {
@@ -80,17 +81,17 @@ class Raindrop {
           Serial.print("Drop in column ");
           Serial.print(colS);
           Serial.println("is at the start");
-          leds[lednr] = CHSV(150, 255, 127);
-          leds[lednr + 1] = CHSV(150, 255, 255);
-          leds[endled] = CHSV(150, 255, 0);
+          leds[lednr] = CHSV(color, sat, 127);//set led blue, full saturation half brightness
+          leds[lednr + 1] = CHSV(color, sat, 255);//set led blue, full saturation and brightness
+          leds[endled] = CHSV(color, sat, 0); // set led dark
         }
         // if current drop is at the end
-        if (dropcolumn[colS] == endcolumn[colS] +1) {
+        if (dropcolumn[colS] == endcolumn[colS] + 1) {
           Serial.print("Drop in column ");
           Serial.print(colS);
           Serial.println("is at the end");
           // do nothing
-           leds[lednr] = CHSV(150, 255, 0);
+          leds[lednr] = CHSV(color, sat, 0); // set led dark
           dropcolumn[colS] = startcolumn[colS];
         }
 
@@ -103,27 +104,41 @@ class Raindrop {
         */
         // drop one;
         Serial.print("Drop in column ");
-          Serial.print(colS);
-          Serial.println("is dropping");
+        Serial.print(colS);
+        Serial.println("is dropping");
         dropcolumn[colS] = dropcolumn[colS] + 1;
-        leds[lednr - 1] = CHSV(150, 255, 0);
-        leds[lednr] = CHSV(150, 255, 127);
-        leds[lednr + 1] = CHSV(150, 255, 255);
+        leds[lednr - 1] = CHSV(color, sat, 0);
+        leds[lednr] = CHSV(color, sat, 127);
+        leds[lednr + 1] = CHSV(color, sat, 255);
 
       }
 
 
     }
 
-    void rainshow() {
+    void animshow(int color) {
+      int ledcolor = 1;
+      int sat = 0;
+      // Fall that
+      switch (color) {
 
-      //check first column
-      //if led on, fall one down
-      //if led on and +1 also on, fall two down and set first off
-
-      // Fall that shit
-      fall();
-      // show that shit
+        case 0:
+          sat = 0; // saturation will go to white
+          break;
+        case 1:
+          ledcolor = 150; // blue
+          sat = 255;
+          break;
+        case 2:
+          ledcolor = 0; // red
+          sat = 255;
+          break;
+        default:
+          ledcolor = color;
+          sat = 255;
+      }
+      fall(ledcolor, sat);
+      // show that
       FastLED.show();
       FastLED.delay(20);
 
@@ -135,10 +150,10 @@ class Raindrop {
 
 void loop() {
   Serial.println("Start LOOP");
-  Raindrop r;
+  Dropanim d;
   int i = 0;
   do {
-    r.rainshow();
+    d.animshow(1); // 0 = white, 1 = blue, 2= red
   } while (i == 0);
   Serial.println("END LOOP");
 } // end loop
