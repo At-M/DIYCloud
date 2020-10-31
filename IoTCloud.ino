@@ -49,18 +49,16 @@ class Dropanim {
     }
 
 
-    int fall(int color, int sat) {
+    int fall(int color, int saturation) {
       int colS = randomcolumn();
       if (lastcolumn[colS] == 0) {
         //This Column doesnt have a raindrop in the last 3
-        //lastcolumn[colS] = startcolumn[colS];
-        //different approach
+        //lastcolumn[colS] = startcolumn[colS]; //different approach
         lastcolumn[colS] = 1;
-        // ERROR WITH RAINFALL SHOULD BE BELOW HERE SOMEWHERE
         Serial.print("ColS is: ");
         Serial.println(colS);
         int lednr = startcolumn[colS];
-        leds[lednr] = CHSV(color, sat, 255); //set led blue, full saturation and brightness
+        leds[lednr] = CHSV(color, saturation, 255); //set led blue, full saturation and brightness
         dropcolumn[colS] = startcolumn[colS];
       }
       else {
@@ -92,18 +90,18 @@ class Dropanim {
           Serial.print(colS);
           Serial.println("is at the start");
 
-          leds[lednr] = CHSV(color, sat, 127);//set led blue, full saturation half brightness
-          leds[lednr + 1] = CHSV(color, sat, 255);//set led blue, full saturation and brightness
-          leds[endled] = CHSV(color, sat, 0); // set led dark
+          leds[lednr] = CHSV(color, saturation, 127);//set led blue, full saturation half brightness
+          leds[lednr + 1] = CHSV(color, saturation, 255);//set led blue, full saturation and brightness
+          leds[endled] = CHSV(color, saturation, 0); // set led dark
         }
         // if current drop is at the end
         if (dropcolumn[colS] == endcolumn[colS] + 1) {
-           Serial.print("Drop in column ");
-            Serial.print(colS);
-            Serial.println("is at the end");
-            // do nothing
-          
-          leds[lednr] = CHSV(color, sat, 0); // set led dark
+          Serial.print("Drop in column ");
+          Serial.print(colS);
+          Serial.println("is at the end");
+          // do nothing
+
+          leds[lednr] = CHSV(color, saturation, 0); // set led dark
           dropcolumn[colS] = startcolumn[colS];
         }
 
@@ -115,13 +113,13 @@ class Dropanim {
           }
         */
         // drop one;
-        //Serial.print("Drop in column ");
-        //Serial.print(colS);
-        // Serial.println("is dropping");
+        Serial.print("Drop in column ");
+        Serial.print(colS);
+        Serial.println("is dropping");
         dropcolumn[colS] = dropcolumn[colS] + 1;
-        leds[lednr - 1] = CHSV(color, sat, 0);
-        leds[lednr] = CHSV(color, sat, 127);
-        leds[lednr + 1] = CHSV(color, sat, 255);
+        leds[lednr - 1] = CHSV(color, saturation, 0);
+        leds[lednr] = CHSV(color, saturation, 127);
+        leds[lednr + 1] = CHSV(color, saturation, 255);
 
       }
 
@@ -130,26 +128,26 @@ class Dropanim {
 
     void animshow(int color) {
       int ledcolor = 1;
-      int sat = 0;
+      int animsaturation = 0;
       // Fall that
       switch (color) {
 
         case 0:
-          sat = 0; // saturation will go to white
+          animsaturation = 0; // saturation will go to white
           break;
         case 1:
           ledcolor = 150; // blue
-          sat = 255;
+          animsaturation = 255;
           break;
         case 2:
           ledcolor = 0; // red
-          sat = 255;
+          animsaturation = 255;
           break;
         default:
           ledcolor = color;
-          sat = 255;
+          animsaturation = 255;
       }
-      fall(ledcolor, sat);
+      fall(ledcolor, animsaturation);
       // show that
       FastLED.show();
       FastLED.delay(20);
@@ -173,9 +171,12 @@ void loop() {
 
   getlight();
   int intbro = 0;
+
+// error with rain is here, if row with "this" is outside the do-loop it works, inside it won'T
+    Dropanim dropa; // THIS
   do {
-    Dropanim d;
-    d.animshow(1); // 0 = white, 1 = blue, 2= red
+// inside
+    dropa.animshow(1); // 0 = white, 1 = blue, 2= red
     intbro++;
   } while (intbro < 50);
   delay(1000);
