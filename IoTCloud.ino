@@ -52,11 +52,13 @@ class Dropanim {
     int fall(int color, int sat) {
       int colS = randomcolumn();
       if (lastcolumn[colS] == 0) {
-        // This Column doesnt have a raindrop in the last 3
-        //lastcolumn[colS] = startcolumn[colS] different approach
+        //This Column doesnt have a raindrop in the last 3
+        //lastcolumn[colS] = startcolumn[colS];
+        //different approach
         lastcolumn[colS] = 1;
-        //  Serial.print("ColS is: ");
-        // Serial.println(colS);
+        // ERROR WITH RAINFALL SHOULD BE BELOW HERE SOMEWHERE
+        Serial.print("ColS is: ");
+        Serial.println(colS);
         int lednr = startcolumn[colS];
         leds[lednr] = CHSV(color, sat, 255); //set led blue, full saturation and brightness
         dropcolumn[colS] = startcolumn[colS];
@@ -86,21 +88,21 @@ class Dropanim {
 
         // If current drop is at the start
         if (dropcolumn[colS] == startcolumn[colS]) {
-          /*  Serial.print("Drop in column ");
-              Serial.print(colS);
-            Serial.println("is at the start");
-          */
+          Serial.print("Drop in column ");
+          Serial.print(colS);
+          Serial.println("is at the start");
+
           leds[lednr] = CHSV(color, sat, 127);//set led blue, full saturation half brightness
           leds[lednr + 1] = CHSV(color, sat, 255);//set led blue, full saturation and brightness
           leds[endled] = CHSV(color, sat, 0); // set led dark
         }
         // if current drop is at the end
         if (dropcolumn[colS] == endcolumn[colS] + 1) {
-          /* Serial.print("Drop in column ");
+           Serial.print("Drop in column ");
             Serial.print(colS);
             Serial.println("is at the end");
             // do nothing
-          */
+          
           leds[lednr] = CHSV(color, sat, 0); // set led dark
           dropcolumn[colS] = startcolumn[colS];
         }
@@ -150,33 +152,31 @@ class Dropanim {
       fall(ledcolor, sat);
       // show that
       FastLED.show();
-      // FastLED.delay(20);
+      FastLED.delay(20);
 
 
     }
 
 };
 
-void gettemp() {
-
-  Serial.print("test");
-
-}
-
-
-void loop() {
+void getlight() {
 
   float lux = lightMeter.readLightLevel();
   Serial.print("Light: ");
   Serial.print(lux);
   Serial.println(" lx");
-  delay(1000);
+}
 
+
+void loop() {
+
+
+  getlight();
   int intbro = 0;
   do {
     Dropanim d;
     d.animshow(1); // 0 = white, 1 = blue, 2= red
     intbro++;
   } while (intbro < 50);
-
+  delay(1000);
 }
