@@ -1,14 +1,17 @@
 // IoTCloud v 0.1
 // https://github.com/At-M/IoTCloud
 // made by At-M
+// BH1750 Sensor: 0x23
 
 #include "ESP8266TrueRandom.h" // For Random dropchance
 #include <FastLED.h>
+#include <Wire.h>
+#include <BH1750.h>
+
+BH1750 lightMeter;
 
 #define NUM_LEDS 70
-#define DATA_PIN 2 // D4, 2
-
-
+#define LEDDATA_PIN 0 // D3, 0
 CRGB leds[NUM_LEDS];
 
 // Needs Bridge from D0 (GPIO16) TO RESET PIN!
@@ -22,9 +25,14 @@ CRGB leds[NUM_LEDS];
 */
 //The setup function is called once at startup of the sketch
 void setup() {
-  FastLED.addLeds<WS2812B, DATA_PIN, GRB>(leds, NUM_LEDS);  // GRB ordering is typical
+  FastLED.addLeds<WS2812B, LEDDATA_PIN, GRB>(leds, NUM_LEDS);  // GRB ordering is typical
   FastLED.setBrightness(50);
-  Serial.begin(115200);
+  Serial.begin(9600);
+
+  // Initialize the I2C bus (BH1750 library doesn't do this automatically)
+  Wire.begin(D2, D1);
+
+  lightMeter.begin();
 }
 class Dropanim {
   public:
@@ -47,50 +55,52 @@ class Dropanim {
         // This Column doesnt have a raindrop in the last 3
         //lastcolumn[colS] = startcolumn[colS] different approach
         lastcolumn[colS] = 1;
-        Serial.print("ColS is: ");
-        Serial.println(colS);
+        //  Serial.print("ColS is: ");
+        // Serial.println(colS);
         int lednr = startcolumn[colS];
         leds[lednr] = CHSV(color, sat, 255); //set led blue, full saturation and brightness
         dropcolumn[colS] = startcolumn[colS];
       }
       else {
-        Serial.print("Column ");
-        Serial.print(colS);
-        Serial.println(" wasn't 0, dropping led for one");
-        // PRINTING ARRAY
-        Serial.print("Dropcolumn: [ ");
-        Serial.print(dropcolumn[0]);
-        Serial.print(" | ");
-        Serial.print(dropcolumn[1]);
-        Serial.print(" | ");
-        Serial.print(dropcolumn[2]);
-        Serial.print(" | ");
-        Serial.print(dropcolumn[3]);
-        Serial.print(" | ");
-        Serial.print(dropcolumn[4]);
-        Serial.print(" | ");
-        Serial.print(dropcolumn[5]);
-        Serial.println(" ] ");
-        // END PRINTING ARRAY
-
+        /* Serial.print("Column ");
+          Serial.print(colS);
+          Serial.println(" wasn't 0, dropping led for one");
+          // PRINTING ARRAY
+          Serial.print("Dropcolumn: [ ");
+          Serial.print(dropcolumn[0]);
+          Serial.print(" | ");
+          Serial.print(dropcolumn[1]);
+          Serial.print(" | ");
+          Serial.print(dropcolumn[2]);
+          Serial.print(" | ");
+          Serial.print(dropcolumn[3]);
+          Serial.print(" | ");
+          Serial.print(dropcolumn[4]);
+          Serial.print(" | ");
+          Serial.print(dropcolumn[5]);
+          Serial.println(" ] ");
+          // END PRINTING ARRAY
+        */
         int lednr = dropcolumn[colS];
         int endled = endcolumn[colS];
 
         // If current drop is at the start
         if (dropcolumn[colS] == startcolumn[colS]) {
-          Serial.print("Drop in column ");
-          Serial.print(colS);
-          Serial.println("is at the start");
+          /*  Serial.print("Drop in column ");
+              Serial.print(colS);
+            Serial.println("is at the start");
+          */
           leds[lednr] = CHSV(color, sat, 127);//set led blue, full saturation half brightness
           leds[lednr + 1] = CHSV(color, sat, 255);//set led blue, full saturation and brightness
           leds[endled] = CHSV(color, sat, 0); // set led dark
         }
         // if current drop is at the end
         if (dropcolumn[colS] == endcolumn[colS] + 1) {
-          Serial.print("Drop in column ");
-          Serial.print(colS);
-          Serial.println("is at the end");
-          // do nothing
+          /* Serial.print("Drop in column ");
+            Serial.print(colS);
+            Serial.println("is at the end");
+            // do nothing
+          */
           leds[lednr] = CHSV(color, sat, 0); // set led dark
           dropcolumn[colS] = startcolumn[colS];
         }
@@ -103,9 +113,9 @@ class Dropanim {
           }
         */
         // drop one;
-        Serial.print("Drop in column ");
-        Serial.print(colS);
-        Serial.println("is dropping");
+        //Serial.print("Drop in column ");
+        //Serial.print(colS);
+        // Serial.println("is dropping");
         dropcolumn[colS] = dropcolumn[colS] + 1;
         leds[lednr - 1] = CHSV(color, sat, 0);
         leds[lednr] = CHSV(color, sat, 127);
@@ -140,20 +150,33 @@ class Dropanim {
       fall(ledcolor, sat);
       // show that
       FastLED.show();
-      FastLED.delay(20);
+      // FastLED.delay(20);
 
 
     }
 
 };
 
+void gettemp() {
+
+  Serial.print("test");
+
+}
+
 
 void loop() {
-  Serial.println("Start LOOP");
-  Dropanim d;
-  int i = 0;
+
+  float lux = lightMeter.readLightLevel();
+  Serial.print("Light: ");
+  Serial.print(lux);
+  Serial.println(" lx");
+  delay(1000);
+
+  int intbro = 0;
   do {
+    Dropanim d;
     d.animshow(1); // 0 = white, 1 = blue, 2= red
-  } while (i == 0);
-  Serial.println("END LOOP");
-} // end loop
+    intbro++;
+  } while (intbro < 50);
+
+}
